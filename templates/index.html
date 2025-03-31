@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        function updateOptions() {
+            const fileInput = document.getElementById('file');
+            const conversionSelect = document.getElementById('conversion_type');
+            conversionSelect.innerHTML = '<option value="">Select Conversion</option>';
+
+            if (fileInput.files.length > 0) {
+                const filename = fileInput.files[0].name;
+                const ext = filename.split('.').pop().toLowerCase();
+                const options = {{ conversion_options|tojson }};
+                let category = null;
+
+                if (['zip', 'rar', '7z'].includes(ext)) category = 'archive';
+                else if (['mp3', 'wav', 'ogg'].includes(ext)) category = 'audio';
+                else if (['pdf', 'docx', 'txt'].includes(ext)) category = 'document';
+                else if (['epub', 'mobi'].includes(ext)) category = 'ebook';
+                else if (['png', 'jpg', 'ico', 'heic'].includes(ext)) category = 'image';
+                else if (['pptx'].includes(ext)) category = 'presentation';
+                else if (['xlsx'].includes(ext)) category = 'spreadsheet';
+                else if (['mp4', 'avi', 'mkv'].includes(ext)) category = 'video';
+
+                if (category && options[category] && options[category][ext]) {
+                    options[category][ext].forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.text = ext + ' to ' + opt;
+                        conversionSelect.appendChild(option);
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>File Converter</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" id="file" name="file" accept="{{ accept_string }}" onchange="updateOptions()" required>
+            <select id="conversion_type" name="conversion_type" required>
+                <option value="">Select Conversion</option>
+            </select>
+            <button type="submit">Convert</button>
+        </form>
+    </div>
+</body>
+</html>
